@@ -6,10 +6,37 @@ export function validateCredentials(email: string, password: string): string | u
   if (!password) return 'Enter your password.';
   return undefined;
 }
+export function validateSignup(email: string, password: string, confirmation: string): string | undefined {
+  const invalid = validateCredentials(email, password);
+  if (invalid) return invalid;
+  if (password.length < 8) return 'Use a password with at least 8 characters.';
+  if (password !== confirmation) return 'Passwords do not match.';
+  return undefined;
+}
 export function createAuthService(client: Pick<SupabaseClient, 'auth'>) {
   let verifiedUser: User | null = null;
   let revision = 0;
   return {
+    async createAccount(email: string, password: string, confirmation: string) {
+      const message = validateSignup(email, password, confirmation);
+      if (message) throw new Error(message);
+      const current = ++revision;
+      verifiedUser = null;
+      const { data, error } = await client.auth.signUp({ email: email.trim(), password });
+      if (current !== revision) throw new Error('Account creation was interrupted. Try signing in or checking your email.');
+      if (error) {
+        if (error.code === 'weak_password') throw new Error('Choose a stronger password that meets the project password requirements.');
+        if (error.status === 429) throw new Error('Too many attempts. Please wait before trying again.');
+        throw new Error('Unable to create an account. Try signing in if you already registered, or try again later.');
+      }
+      // Confirmation-enabled projects return no session (including concealed duplicate signups).
+      if (!data.session) return { user: null, confirmationRequired: true };
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (current !== revision) throw new Error('Account creation was interrupted. Please sign in.');
+      if (userError || !userData.user) throw new Error('Account submitted, but verification failed. Please try signing in.');
+      verifiedUser = userData.user;
+      return { user: userData.user, confirmationRequired: false };
+    },
     async login(email: string, password: string) {
       const message = validateCredentials(email, password);
       if (message) throw new Error(message);

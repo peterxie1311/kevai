@@ -33,3 +33,25 @@ test('logout wins over a pending login',async()=>{
  let release;const waiting=new Promise(r=>release=r);const {service}=setup({getUser:async()=>{await waiting;return {data:{user},error:null}}});
  const login=service.login('p@example.test','password');await Promise.resolve();await service.logout();release();await assert.rejects(login,/cancelled/);assert.equal(await service.getAccessToken(),undefined);
 });
+
+test('signup validates matching and sufficiently long passwords before calling Supabase',async()=>{
+ let calls=0;const {service}=setup({signUp:async()=>{calls++;return {data:{session:null},error:null}}});
+ await assert.rejects(service.createAccount('p@example.test','short','short'),/8 characters/);
+ await assert.rejects(service.createAccount('p@example.test','password','different'),/match/);
+ assert.equal(calls,0);
+});
+test('email confirmation signup never grants access or reveals whether account existed',async()=>{
+ const {service}=setup({signUp:async(input)=>{assert.equal(input.email,'p@example.test');return {data:{session:null,user},error:null}}});
+ assert.deepEqual(await service.createAccount(' p@example.test ','password','password'),{user:null,confirmationRequired:true});assert.equal(await service.getAccessToken(),undefined);
+});
+test('signup with session still requires server user validation',async()=>{
+ const {service}=setup({signUp:async()=>({data:{session:{user}},error:null})});
+ assert.equal((await service.createAccount('p@example.test','password','password')).user.id,user.id);assert.equal(await service.getAccessToken(),'session-token');
+ const denied=setup({signUp:async()=>({data:{session:{user}},error:null}),getUser:async()=>({data:{user:null},error:new Error('invalid')})}).service;
+ await assert.rejects(denied.createAccount('p@example.test','password','password'),/verification failed/);assert.equal(await denied.getAccessToken(),undefined);
+});
+test('signup handles rate limit and server password policy failures',async()=>{
+ for(const [error,pattern] of [[{status:429},/wait/],[{code:'weak_password'},/stronger/],[{status:400},/Unable to create/]]) {
+ const {service}=setup({signUp:async()=>({data:{},error})});await assert.rejects(service.createAccount('p@example.test','password','password'),pattern);assert.equal(await service.getAccessToken(),undefined);
+ }
+});
