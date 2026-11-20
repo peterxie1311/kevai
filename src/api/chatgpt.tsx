@@ -25,6 +25,9 @@ export interface ChatResponse {
   status?: string;
   output: Array<{
     type: string;
+    name?: string;
+    arguments?: string;
+    call_id?: string;
     content?: ResponsePart[];
   }>;
 }

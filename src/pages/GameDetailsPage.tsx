@@ -1,3 +1,6 @@
+import DataInformationCard from "../components/DataInformationCard";
+import { loadInformationCards } from "../services/informationCards";
+import type { SavedCard } from "../types/informationCards";
 import { useEffect, useRef, useState } from "react";
 import Brand from "../components/Brand";
 import ChatPanel from "../components/ChatPanel";
@@ -16,12 +19,52 @@ export default function GameDetailsPage({
   onLogout,
   onSettings,
 }: Props) {
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+  const [cardError, setCardError] = useState("");
+  const [reloadCards, setReloadCards] = useState(0);
   const [chatOpen, setChatOpen] = useState(() => window.innerWidth > 700);
   const reopenButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const title = `${game.away.name} at ${game.home.name}`;
   const date = new Date(game.startsAt);
+  const aliases: Record<string, string> = {
+    GS: "GSW",
+    NY: "NYK",
+    NO: "NOP",
+    SA: "SAS",
+    WSH: "WAS",
+    UTAH: "UTA",
+  };
+  const teamKey = (code: string) => aliases[code] || code;
+  const gameKey = `${teamKey(game.away.abbreviation)}-${teamKey(game.home.abbreviation)}-${date.toISOString().slice(0, 10)}`;
+  useEffect(() => {
+    const controller = new AbortController();
+    setCardError("");
+    setSavedCards([]);
+    loadInformationCards(gameKey, controller.signal)
+      .then((cards) => {
+        if (!controller.signal.aborted)
+          setSavedCards((previous) => [
+            ...new Map(
+              [...cards, ...previous].map((card) => [card.id, card]),
+            ).values(),
+          ]);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setCardError("Unable to load your saved cards.");
+      });
+    return () => controller.abort();
+  }, [gameKey, reloadCards]);
+  function cardSaved(card: SavedCard) {
+    setSavedCards((previous) =>
+      previous.some((item) => item.id === card.id)
+        ? previous
+        : [...previous, card],
+    );
+  }
+
   const timezone = Intl.DateTimeFormat()
     .resolvedOptions()
     .timeZone.replaceAll("_", " ");
@@ -86,7 +129,21 @@ export default function GameDetailsPage({
             })}{" "}
             · {tipoff}
           </p>
+          {cardError && (
+            <p role="alert">
+              {cardError}{" "}
+              <button
+                className="text-button"
+                onClick={() => setReloadCards((value) => value + 1)}
+              >
+                Retry cards
+              </button>
+            </p>
+          )}
           <div className="information-grid">
+            {savedCards.map((card) => (
+              <DataInformationCard key={card.id} card={card.card} />
+            ))}
             <InformationCard title="Game information">
               <dl className="game-facts">
                 <div>
@@ -148,7 +205,14 @@ export default function GameDetailsPage({
       </section>
       <ChatPanel
         gameTitle={title}
-        game={{ title, startsAt: game.startsAt, venue: game.venue }}
+        game={{
+          gameId: game.id,
+          gameKey,
+          title,
+          startsAt: game.startsAt,
+          venue: game.venue,
+        }}
+        onCardSaved={cardSaved}
         hidden={!chatOpen}
         onClose={() => toggleChat(false)}
         closeButtonRef={closeButton}

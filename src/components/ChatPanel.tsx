@@ -1,3 +1,5 @@
+import CardPreview from "./CardPreview";
+import type { CardProposal, SavedCard } from "../types/informationCards";
 import {
   useEffect,
   useRef,
@@ -17,6 +19,7 @@ import type { ResponsePart } from "../api/chatgpt";
 interface Props {
   gameTitle: string;
   game: GameContext;
+  onCardSaved: (card: SavedCard) => void;
   hidden: boolean;
   onClose: () => void;
   closeButtonRef: RefObject<HTMLButtonElement | null>;
@@ -24,13 +27,18 @@ interface Props {
 export default function ChatPanel({
   gameTitle,
   game,
+  onCardSaved,
   hidden,
   onClose,
   closeButtonRef,
 }: Props) {
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<
-    (ChatTurn & { parts?: ResponsePart[]; incomplete?: boolean })[]
+    (ChatTurn & {
+      parts?: ResponsePart[];
+      incomplete?: boolean;
+      cards?: CardProposal[];
+    })[]
   >([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -70,6 +78,7 @@ export default function ChatPanel({
             content: answer.text,
             parts: answer.parts,
             incomplete: answer.incomplete,
+            cards: answer.cards,
           },
         ]);
     } catch (caught) {
@@ -121,11 +130,19 @@ export default function ChatPanel({
         {messages.map((message, index) => (
           <div className={`chat-message ${message.role}`} key={index}>
             <span>{message.role === "user" ? "You" : "KevAI"}</span>
-            {message.parts ? (
+            {message.parts?.length ? (
               <ChatAnswer parts={message.parts} />
             ) : (
               message.content
             )}
+            {message.cards?.map((proposal) => (
+              <CardPreview
+                key={proposal.id}
+                proposal={proposal}
+                game={game}
+                onSaved={onCardSaved}
+              />
+            ))}
             {message.incomplete && <small>Response may be incomplete.</small>}
           </div>
         ))}

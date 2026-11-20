@@ -42,9 +42,11 @@ await build({
     {
       name: "mock-auth",
       setup(build) {
+      build.onLoad({ filter: /services\/informationCards\.tsx$/ }, () => ({ loader: "tsx", contents: `const saved=[];export async function loadInformationCards(){return saved;}export async function saveInformationCard(proposal,game){const row={id:proposal.id,game_key:game.gameKey,card:proposal.card,created_at:new Date().toISOString()};saved.push(row);return row;}` }));
+
       build.onLoad({ filter: /services\/userSettings\.tsx$/ }, () => ({ loader: "tsx", contents: `let configured=false;export async function userSettings(method="GET",body){if(method==="POST"&&body.key)configured=true;if(method==="DELETE")configured=false;return {configured,model:"gpt-6.2-astra"};}` }));
 
-      build.onLoad({ filter: /services\/gameChat\.tsx$/ }, () => ({ loader: "tsx", contents: `export async function askAboutGame(){ return {text:"Latest report [source]",parts:[{type:"output_text",text:"Latest report [source]",annotations:[{type:"url_citation",start_index:14,end_index:22,url:"https://www.nba.com/news",title:"NBA report"}]}],incomplete:false}; }` }));
+      build.onLoad({ filter: /services\/gameChat\.tsx$/ }, () => ({ loader: "tsx", contents: `export async function askAboutGame(game,conversation){ return {cards: conversation.at(-1).content.includes("card") ? [{id:"11111111-1111-4111-8111-111111111111",card:{title:"Matchup notes",body:"Verified game notes",sources:[],images:[],table:null,graph:null}}] : [],text:"Latest report [source]",parts:[{type:"output_text",text:"Latest report [source]",annotations:[{type:"url_citation",start_index:14,end_index:22,url:"https://www.nba.com/news",title:"NBA report"}]}],incomplete:false}; }` }));
 
         build.onLoad({ filter: /services\/games\.tsx$/ }, () => ({
           loader: "ts",
@@ -133,8 +135,23 @@ try {
     );
     fireEvent.click(view.getByRole("button", { name: "Open chat" }));
     assert.match(view.getByRole("log").textContent, /What should I know/);
+    fireEvent.change(view.getByLabelText("Your message"), { target: { value: "Put that into a card" } });
+    fireEvent.click(view.getByRole("button", { name: "Send message" }));
+    await view.findByRole("button", { name: "Yes, add card" });
+    assert.equal(view.container.querySelector("main").textContent.includes("Matchup notes"), false);
+    fireEvent.click(view.getByRole("button", { name: "No" }));
+    assert.equal(view.container.querySelector("main").textContent.includes("Matchup notes"), false);
+    fireEvent.change(view.getByLabelText("Your message"), { target: { value: "Make another card" } });
+    fireEvent.click(view.getByRole("button", { name: /Send message/ }));
+    await view.findByRole("button", { name: "Yes, add card" });
+    fireEvent.click(view.getByRole("button", { name: "Yes, add card" }));
+    await view.findByText("✓ Added to this game.");
+    assert.equal(view.container.querySelector("main").textContent.includes("Matchup notes"), true);
     fireEvent.click(view.getByRole("button", { name: /All games/ }));
     await view.findByRole("heading", { name: "Coming up." });
+    fireEvent.click(await view.findByRole("button", { name: "Boston Celtics at Los Angeles Lakers" }));
+    await waitFor(() => assert.equal(view.container.querySelector("main").textContent.includes("Matchup notes"), true));
+
     fireEvent.click(view.getByRole("button", { name: "Sign out" }));
     await view.findByRole("heading", { name: "Back in the game." });
     cleanup();

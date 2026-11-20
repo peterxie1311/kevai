@@ -1,3 +1,4 @@
+import { validateCard, type CardProposal } from "../types/informationCards";
 import {
   createChatGPTClient,
   responseParts,
@@ -11,6 +12,8 @@ export interface ChatTurn {
   content: string;
 }
 export interface GameContext {
+  gameId?: string;
+  gameKey?: string;
   title: string;
   startsAt: string;
   venue: string;
@@ -26,14 +29,44 @@ export async function askAboutGame(
 ) {
   try {
     const response = await client.respond(
-      { game, input: conversation.slice(-5).map((turn, index, turns) => ({ ...turn, content: turn.content.slice(0, index === turns.length - 1 ? 4000 : 2000) })) },
+      {
+        game,
+        input: conversation
+          .slice(-5)
+          .map((turn, index, turns) => ({
+            ...turn,
+            content: turn.content.slice(
+              0,
+              index === turns.length - 1 ? 4000 : 2000,
+            ),
+          })),
+      },
       signal,
     );
-    const text = responseText(response);
+    const cards: CardProposal[] =
+      response.status === "incomplete"
+        ? []
+        : response.output
+            .filter(
+              (item) =>
+                item.type === "function_call" &&
+                item.name === "propose_information_card",
+            )
+            .slice(0, 3)
+            .map((item) => ({
+              id: crypto.randomUUID(),
+              card: validateCard(JSON.parse(item.arguments || "{}")),
+            }));
+    const text =
+      responseText(response) ||
+      (cards.length
+        ? "Here’s a card preview. Review it and click Yes to add it to this game."
+        : "");
     if (!text.trim())
       throw new Error("The AI returned no answer. Please try again.");
     return {
       text,
+      cards,
       parts: responseParts(response),
       incomplete: response.status === "incomplete",
     };
