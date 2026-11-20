@@ -12,10 +12,10 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const React = await import('react');
 const { render, fireEvent, waitFor, cleanup } = await import('@testing-library/react');
 const directory = await mkdtemp(path.resolve('tests/.react-test-'));
-const source = await readFile('src/services/auth.ts','utf8');
+const source = await readFile('src/services/auth.tsx','utf8');
 const validators = source.slice(source.indexOf('export function validateCredentials'), source.indexOf('export function createAuthService'));
 await build({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'esm',outfile:path.join(directory,'app.mjs'),packages:'external',plugins:[{
- name:'mock-auth',setup(build) {build.onLoad({filter:/services\/games\.ts$/},()=>({loader:'ts',contents:`export async function getUpcomingGames(){return {games:[{id:'test-game',startsAt:'2026-11-21T01:00:00Z',away:{name:'Boston Celtics',abbreviation:'BOS'},home:{name:'Los Angeles Lakers',abbreviation:'LAL'},venue:'Test Arena',timeTbd:false}],source:'NBA.com',fetchedAt:'2026-11-20T00:00:00Z'};}`}));build.onLoad({filter:/services\/auth\.ts$/},()=>({loader:'ts',contents:validators+`
+ name:'mock-auth',setup(build) {build.onLoad({filter:/services\/games\.tsx$/},()=>({loader:'ts',contents:`export async function getUpcomingGames(){return {games:[{id:'test-game',startsAt:'2026-11-21T01:00:00Z',away:{name:'Boston Celtics',abbreviation:'BOS'},home:{name:'Los Angeles Lakers',abbreviation:'LAL'},venue:'Test Arena',timeTbd:false}],source:'NBA.com',fetchedAt:'2026-11-20T00:00:00Z'};}`}));build.onLoad({filter:/services\/auth\.tsx$/},()=>({loader:'ts',contents:validators+`
  const state = globalThis.__authHarness;
  export const auth = {
  validateUser: async () => state.user,

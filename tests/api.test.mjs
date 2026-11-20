@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
-const built = await build({entryPoints:['src/api/index.ts'],bundle:true,write:false,format:'esm',platform:'node'});
+const built = await build({entryPoints:['src/api/index.tsx'],bundle:true,write:false,format:'esm',platform:'node'});
 const api = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const json = (value, status=200) => new Response(JSON.stringify(value), {status,headers:{'content-type':'application/json'}});
 test('encodes query, JSON body and headers', async()=>{

@@ -22,17 +22,17 @@ export function createSupabaseClient(config: SupabaseConfig, fetcher: typeof fet
     return filters;
   }
   return {
-    select: <T>(table: string, query: Query = {}, signal?: AbortSignal) =>
+    select: <T,>(table: string, query: Query = {}, signal?: AbortSignal) =>
       call<T[]>(`rest/v1/${resource(table)}`, { query: { select: '*', ...query }, signal }),
-    insert: <T>(table: string, rows: unknown, signal?: AbortSignal) =>
+    insert: <T,>(table: string, rows: unknown, signal?: AbortSignal) =>
       call<T[]>(`rest/v1/${resource(table)}`, { method: 'POST', body: rows, headers: { Prefer: 'return=representation' }, signal }),
-    update: <T>(table: string, values: unknown, filters: Query, signal?: AbortSignal) =>
+    update: <T,>(table: string, values: unknown, filters: Query, signal?: AbortSignal) =>
       call<T[]>(`rest/v1/${resource(table)}`, { method: 'PATCH', body: values, query: filtered(filters), headers: { Prefer: 'return=representation' }, signal }),
-    remove: <T>(table: string, filters: Query, signal?: AbortSignal) =>
+    remove: <T,>(table: string, filters: Query, signal?: AbortSignal) =>
       call<T[]>(`rest/v1/${resource(table)}`, { method: 'DELETE', query: filtered(filters), headers: { Prefer: 'return=representation' }, signal }),
-    rpc: <T>(name: string, args: Record<string, unknown> = {}, signal?: AbortSignal) =>
+    rpc: <T,>(name: string, args: Record<string, unknown> = {}, signal?: AbortSignal) =>
       call<T>(`rest/v1/rpc/${resource(name)}`, { method: 'POST', body: args, signal }),
-    invoke: <T>(name: string, body: unknown, signal?: AbortSignal) =>
+    invoke: <T,>(name: string, body: unknown, signal?: AbortSignal) =>
       call<T>(`functions/v1/${resource(name)}`, { method: 'POST', body, signal }),
   };
 }

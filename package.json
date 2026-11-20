@@ -7,10 +7,10 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && vite build --config vite.config.tsx",
     "test": "npm run typecheck && node --test tests/*.test.mjs",
-    "dev": "vite",
-    "preview": "vite preview"
+    "dev": "vite --config vite.config.tsx",
+    "preview": "vite preview --config vite.config.tsx"
   },
   "keywords": [],
   "author": "",
