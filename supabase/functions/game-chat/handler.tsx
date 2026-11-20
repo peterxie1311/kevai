@@ -49,14 +49,37 @@ export function createHandler({ env, fetch: fetcher }: Dependencies) {
     } catch {
       return json({ error: "Unable to verify your login. Try again." }, 503);
     }
-    const key = env("OPENAI_API_KEY");
+    const service = env("SUPABASE_SERVICE_ROLE_KEY");
+    if (!service)
+      return json({ error: "Chat settings storage is not configured." }, 503);
+    let credentials: { key?: string; model?: string } | null;
+    try {
+      const saved = await fetcher(
+        `${projectUrl}/rest/v1/rpc/kevai_openai_credentials`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${service}`,
+            apikey: service,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ i_user_id: userId }),
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+      if (!saved.ok) throw new Error();
+      credentials = await saved.json();
+    } catch {
+      return json(
+        { error: "Unable to load your API settings. Please try again." },
+        503,
+      );
+    }
+    const key = credentials?.key;
     if (!key)
       return json(
-        {
-          error:
-            "Chat is not configured yet. Add OPENAI_API_KEY in the Supabase function secrets.",
-        },
-        503,
+        { error: "Add your OpenAI API key in API settings before using chat." },
+        409,
       );
     let body: { input?: unknown; game?: unknown };
     try {
@@ -123,7 +146,7 @@ export function createHandler({ env, fetch: fetcher }: Dependencies) {
         },
         signal: AbortSignal.any([req.signal, AbortSignal.timeout(55_000)]),
         body: JSON.stringify({
-          model: env("OPENAI_MODEL") || "gpt-6.2-astra",
+          model: credentials?.model || "gpt-6.2-astra",
           instructions,
           input: [
             {

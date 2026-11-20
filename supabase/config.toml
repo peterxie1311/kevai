@@ -2,3 +2,7 @@
 # The handler verifies the caller with Supabase Auth /user before any OpenAI call.
 verify_jwt = false
 entrypoint = "./functions/game-chat/index.tsx"
+
+[functions.user-settings]
+verify_jwt = false
+entrypoint = "./functions/user-settings/index.tsx"

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Brand from "../components/Brand";
 import GameCard from "../components/GameCard";
 import GameDetailsPage from "./GameDetailsPage";
+import SettingsPage from "./SettingsPage";
 import {
   getUpcomingGames,
   type GameSchedule,
@@ -14,6 +15,7 @@ export default function DashboardPage({
   email: string;
   onLogout: () => void;
 }) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<ScheduledGame | null>(null);
   const [schedule, setSchedule] = useState<GameSchedule>();
   const [loading, setLoading] = useState(true);
@@ -48,12 +50,16 @@ export default function DashboardPage({
     if (!groups.has(label)) groups.set(label, []);
     groups.get(label)!.push(game);
   }
+  if (settingsOpen)
+    return <SettingsPage onBack={() => setSettingsOpen(false)} />;
+
   if (selectedGame)
     return (
       <GameDetailsPage
         game={selectedGame}
         onBack={() => setSelectedGame(null)}
         onLogout={onLogout}
+        onSettings={() => setSettingsOpen(true)}
       />
     );
 
@@ -63,6 +69,9 @@ export default function DashboardPage({
         <Brand />
         <div className="dashboard-account">
           <span>{email}</span>
+          <button className="secondary" onClick={() => setSettingsOpen(true)}>
+            API settings
+          </button>
           <button className="secondary" onClick={onLogout}>
             Sign out
           </button>

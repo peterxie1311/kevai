@@ -42,6 +42,8 @@ await build({
     {
       name: "mock-auth",
       setup(build) {
+      build.onLoad({ filter: /services\/userSettings\.tsx$/ }, () => ({ loader: "tsx", contents: `let configured=false;export async function userSettings(method="GET",body){if(method==="POST"&&body.key)configured=true;if(method==="DELETE")configured=false;return {configured,model:"gpt-6.2-astra"};}` }));
+
       build.onLoad({ filter: /services\/gameChat\.tsx$/ }, () => ({ loader: "tsx", contents: `export async function askAboutGame(){ return {text:"Latest report [source]",parts:[{type:"output_text",text:"Latest report [source]",annotations:[{type:"url_citation",start_index:14,end_index:22,url:"https://www.nba.com/news",title:"NBA report"}]}],incomplete:false}; }` }));
 
         build.onLoad({ filter: /services\/games\.tsx$/ }, () => ({
@@ -96,6 +98,17 @@ try {
     await view.findByRole("button", {
       name: "Boston Celtics at Los Angeles Lakers",
     });
+    fireEvent.click(view.getByRole("button", { name: "API settings" }));
+    await view.findByRole("heading", { name: "API settings" });
+    await waitFor(() => assert.equal(view.getByLabelText("OpenAI API key").disabled, false));
+    fireEvent.change(view.getByLabelText("OpenAI API key"), { target: { value: "sk-test-only-key-123456789" } });
+    fireEvent.submit(view.container.querySelector("form"));
+    await view.findByText("✓ OpenAI key configured");
+    assert.equal(view.getByLabelText("Replace OpenAI API key").value, "");
+    fireEvent.click(view.getByRole("button", { name: "Remove key" }));
+    await view.findByText("No OpenAI key configured");
+    fireEvent.click(view.getByRole("button", { name: "Back", exact: true }));
+    await view.findByRole("button", { name: "Boston Celtics at Los Angeles Lakers" });
     fireEvent.click(
       view.getByRole("button", {
         name: "Boston Celtics at Los Angeles Lakers",

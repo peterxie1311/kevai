@@ -402,3 +402,12 @@ button.game-card:focus-visible { outline: 3px solid #759c54; outline-offset: 4px
 .chat-message > small { display: block; color: #8b613f; margin-top: 8px; }
 .chat-error { color: #9b3c31 !important; line-height: 1.6; }
 .chat-progress { color: #627752; font-size: 12px; }
+.settings-page main { max-width: 650px; }
+.settings-page h1 { font-size: 48px; }
+.settings-form { margin-top: 32px; }
+.settings-form label { margin-top: 25px; }
+.settings-form .muted { font-size: 11px; margin-top: 10px; }
+.settings-form .primary { margin-top: 25px; }
+.settings-form .secondary { margin-top: 15px; }
+.settings-form [role="status"] { font-size: 12px; line-height: 1.6; }
+.key-status { color: #416f47; font-size: 13px; }

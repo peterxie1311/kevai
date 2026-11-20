@@ -8,8 +8,14 @@ interface Props {
   game: ScheduledGame;
   onBack: () => void;
   onLogout: () => void;
+  onSettings: () => void;
 }
-export default function GameDetailsPage({ game, onBack, onLogout }: Props) {
+export default function GameDetailsPage({
+  game,
+  onBack,
+  onLogout,
+  onSettings,
+}: Props) {
   const [chatOpen, setChatOpen] = useState(() => window.innerWidth > 700);
   const reopenButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -45,6 +51,9 @@ export default function GameDetailsPage({ game, onBack, onLogout }: Props) {
       <section className="game-details-content">
         <header className="details-header">
           <Brand />
+          <button className="secondary" onClick={onSettings}>
+            API settings
+          </button>
           <button className="secondary" onClick={onLogout}>
             Sign out
           </button>

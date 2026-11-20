@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+const b=await build({entryPoints:['supabase/functions/user-settings/handler.tsx'],bundle:true,write:false,format:'esm',platform:'node'});
+const {createSettingsHandler}=await import(`data:text/javascript;base64,${Buffer.from(b.outputFiles[0].text).toString('base64')}`);
+function setup(){const calls=[];const handler=createSettingsHandler({env:n=>({SUPABASE_URL:'https://project.test',SUPABASE_ANON_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}[n]),fetch:async(url,options)=>{calls.push({url,body:options?.body?JSON.parse(options.body):null});if(url.endsWith('/user'))return new Response(JSON.stringify({id:'verified-user'}));if(url.endsWith('kevai_openai_status'))return new Response(JSON.stringify({configured:true,model:'user-model',key:'must-never-leak'}));return new Response('null');}});return{handler,calls};}
+const request=(method='GET',body,authorized=true)=>new Request('https://settings.test',{method,headers:authorized?{Authorization:'Bearer valid'}:{},...(body?{body:JSON.stringify(body)}:{})});
+test('settings require authentication before touching storage',async()=>{const{handler,calls}=setup();assert.equal((await handler(request('GET',undefined,false))).status,401);assert.equal(calls.length,0);});
+test('GET exposes configuration status and model only',async()=>{const{handler}=setup();const response=await handler(request());assert.deepEqual(await response.json(),{configured:true,model:'user-model'});});
+test('save derives identity from validated JWT and never echoes saved key',async()=>{const{handler,calls}=setup();const key='sk-test-only-key-123456789';const response=await handler(request('POST',{user_id:'someone-else',key,model:'user-model'}));assert.equal(response.status,200);assert.equal(calls[1].body.i_user_id,'verified-user');assert.equal(calls[1].body.i_key,key);assert.ok(!(await response.text()).includes(key));});
+test('remove only affects verified user',async()=>{const{handler,calls}=setup();await handler(request('DELETE',{model:'user-model',user_id:'attacker-choice'}));assert.equal(calls[1].body.i_remove,true);assert.equal(calls[1].body.i_user_id,'verified-user');});
+test('rejects malformed key before saving',async()=>{const{handler,calls}=setup();assert.equal((await handler(request('POST',{key:'bad',model:'user-model'}))).status,400);assert.equal(calls.length,1);});

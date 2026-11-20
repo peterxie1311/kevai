@@ -106,10 +106,16 @@ Select a game card to open its details view, then use All games to return. `Game
 
 ## Web-search chat setup
 
-The backend source is in `supabase/functions/game-chat/`. Add **OPENAI_API_KEY** under the KevAI project’s Supabase **Edge Functions → Secrets**. Never add it to `src/config.tsx`, a Vite environment variable, or git. The function defaults to `gpt-6.2-astra`; set **OPENAI_MODEL** server-side to use another model that supports Responses web search. API usage and web searches are billable. Set the OpenAI project’s budget/usage limits before opening the app to more users.
+The backend source is in `supabase/functions/game-chat/`. Each user opens **API settings**, saves their own OpenAI API key, and chooses a web-search-capable model available to their OpenAI account (default `gpt-6.2-astra`). Requests are billed to that user’s OpenAI account. There is no shared `OPENAI_API_KEY` fallback.
 
 The function verifies each caller through Supabase Auth’s `/user` endpoint; `verify_jwt = false` delegates authentication to this explicit server check, not to the browser. Missing/invalid sessions receive 401. Missing keys produce a configuration message. Requests are bounded to recent messages, two tool calls and 1,800 output tokens, with timeouts and no automatic retries. The six-request/minute throttle is best-effort per function instance, not a distributed quota.
 
 The game chat sends game title, scheduled UTC tip-off, venue, and recent conversation. It can research current injuries, lineups, and reliably reported news, while saying when reports cannot be verified. Source citations are displayed as clickable links beside the relevant answer text; no arbitrary response HTML is rendered. Search is available with automatic tool selection; not every message needs a search. Stop response cancels the browser request (upstream work may already have run). Closing chat preserves it; leaving the game discards its history. Failed messages remain visible and the draft is restored for manual retry.
 
 Checks use mocked OpenAI/Auth responses; no real paid search call is made during automated testing. Source: https://developers.openai.com/api/docs/guides/tools-web-search
+
+## Per-user API keys
+
+`auth.users` owns login identities. `public.profiles` stores the preferred model, with owner-only read RLS. `private.user_openai_keys` links a user to an encrypted Supabase Vault secret; no browser role can access this table or the credential RPC. The `user-settings` Edge Function validates the caller with Supabase Auth, then uses the backend service role for status/save/remove operations, always deriving the user ID from that verified token. Status responses include only `configured` and `model`. Blank key input preserves the saved key; replacing/removing clears old Vault secrets. Deleting the auth account cascades through its profile and key mapping and deletes its Vault secret.
+
+The chat function retrieves only the verified caller’s key/model using a service-only RPC. Saved secrets are never sent back to the browser or written into logs. Browser inputs are cleared after save attempts; API keys are not stored in localStorage. Keys are format-checked on save; OpenAI determines validity, model access and available credit on use. Schema setup is documented in `supabase/schema/user-settings.sql` (already applied to the KevAI project; do not rerun blindly). Supabase runtime supplies `SUPABASE_SERVICE_ROLE_KEY`; never expose it in frontend configuration.
