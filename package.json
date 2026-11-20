@@ -1,24 +1,36 @@
 {
   "name": "kevai",
   "version": "0.1.0",
-  "description": "Lightweight static TypeScript API foundation",
+  "description": "React and TypeScript basketball app with Supabase authentication",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && node scripts/build.mjs",
-    "test": "npm run typecheck && node --test tests/*.test.mjs"
+    "build": "npm run typecheck && vite build",
+    "test": "npm run typecheck && node --test tests/*.test.mjs",
+    "dev": "vite",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "type": "module",
   "devDependencies": {
+    "@testing-library/react": "16.3.3",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
     "esbuild": "0.25.12",
-    "typescript": "5.9.3"
+    "happy-dom": "21.0.4",
+    "typescript": "5.9.3",
+    "vite": "7.3.8",
+    "vite-plugin-singlefile": "2.3.4"
   },
   "private": true,
   "dependencies": {
-    "@supabase/supabase-js": "2.119.0"
+    "@supabase/supabase-js": "2.119.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   }
 }

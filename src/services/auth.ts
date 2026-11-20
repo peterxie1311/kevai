@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
-import { supabaseConfig } from './config';
+import { supabaseConfig } from '../config';
 
 export function validateCredentials(email: string, password: string): string | undefined {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return 'Enter a valid email address.';

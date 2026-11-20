@@ -1,13 +1,15 @@
 # KevAI
 
-Lightweight TypeScript API foundation, with Supabase Auth and a bundled browser SDK.
+React + TypeScript + Vite application with Supabase authentication.
 
 ## Build and open
 
-Node 22+ is needed only for development/building:
+Node 22.12+ (or a supported newer Node version) is needed for development/building:
 
 ```sh
 npm ci
+npm run dev # development server with React Fast Refresh
+# Stop the dev server with Ctrl+C before running the following commands.
 npm test
 npm run build
 ```
@@ -44,7 +46,7 @@ Every client accepts an optional fetch implementation for tests. Each call accep
 
 ## Configuration and backend contracts
 
-Configuration is passed explicitly to the factories; there are no hidden environment variables. Nothing is configured or called automatically. Never put an OpenAI key, NBA provider secret, or Supabase secret/service-role key in browser code, HTML, localStorage, or git. Supabase publishable keys are intended for browser use; restrict exposed tables/functions using appropriate grants and RLS. Session acquisition/refresh is deliberately external: pass a fresh JWT through getAccessToken.
+API gateway configuration is passed explicitly to the factories. The app configures Supabase Auth from `src/config.ts` and checks authentication on startup. Never put an OpenAI key, NBA provider secret, or Supabase secret/service-role key in browser code, HTML, localStorage, or git. Supabase publishable keys are intended for browser use; restrict exposed tables/functions using appropriate grants and RLS. The React app uses the Auth service for session acquisition/refresh; standalone clients accept a fresh JWT through getAccessToken.
 
 The OpenAI gateway is **not deployed or implemented yet**. It must authenticate the caller, validate/allowlist model and input limits, enforce usage limits, attach its server-held OpenAI key, call `POST https://api.openai.com/v1/responses`, and return the non-streaming JSON response with the original status. The frontend sends `store: false` and `stream: false`; text extraction supports Responses API message output. No ChatGPT subscription login is assumed.
 
@@ -73,3 +75,19 @@ The official SDK handles password sign-in and token refresh. `getUser()` checks 
 Auth references: https://supabase.com/docs/reference/javascript/auth-signinwithpassword and https://supabase.com/docs/reference/javascript/auth-getuser
 
 Email links use the project’s configured Supabase Auth Site URL. For a hosted deployment, set that URL to your hosted application; for a locally opened file, return to the file manually after confirmation (the default redirect may point to localhost). Registration must be enabled in Supabase Auth. This change preserves project authentication settings and does not create any accounts or send test emails.
+
+## React project structure
+
+- `index.html` → `src/main.tsx` → `src/App.tsx`: the familiar React entry point.
+- `src/pages/AuthPage.tsx`: login/create-account forms.
+- `src/pages/DashboardPage.tsx`: verified-user welcome screen.
+- `src/components/`: reusable brand, layout, and password input components.
+- `src/hooks/useAuth.ts`: authentication state, session checks, and event cleanup.
+- `src/services/auth.ts`: Supabase authentication functions.
+- `src/services/database.ts`: database client wired to the current user token.
+- `src/api/`: shared HTTP, Supabase REST, ChatGPT gateway, and NBA gateway clients.
+- `src/styles.css`: presentation styles.
+- `src/config.ts`: public Supabase project configuration.
+- `vite.config.ts`: React development and single-file production build configuration.
+
+Use `npm run dev` while editing. `npm run build` uses Vite with `vite-plugin-singlefile` to inline the production JavaScript and CSS into `dist/index.html`, preserving double-click use without a running npm process. Opening the source `index.html` directly is not supported; use the development server or the built file. Remote API CORS requirements still apply.

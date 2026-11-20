@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
-const built=await build({entryPoints:['src/auth.ts'],bundle:true,write:false,format:'esm',platform:'node'});
+const built=await build({entryPoints:['src/services/auth.ts'],bundle:true,write:false,format:'esm',platform:'node'});
 const {createAuthService,validateCredentials}=await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const user={id:'user-1',email:'p@example.test'};
 function setup(overrides={}) {
