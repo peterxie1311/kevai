@@ -91,3 +91,9 @@ Email links use the project’s configured Supabase Auth Site URL. For a hosted 
 - `vite.config.ts`: React development and single-file production build configuration.
 
 Use `npm run dev` while editing. `npm run build` uses Vite with `vite-plugin-singlefile` to inline the production JavaScript and CSS into `dist/index.html`, preserving double-click use without a running npm process. Opening the source `index.html` directly is not supported; use the development server or the built file. Remote API CORS requirements still apply.
+
+## Upcoming NBA games
+
+The dashboard fetches real upcoming matchups for the next seven days, grouped by the viewer’s local calendar date. Cards show home/away teams, local tip-off, and venue. No API key is required. `src/services/games.ts` first reads NBA.com’s public season schedule, then falls back to ESPN’s public NBA daily scoreboards when NBA.com is blocked or stale. The displayed source identifies the feed in use. Completed, live, cancelled and postponed games are omitted. Responses are cached in memory for five minutes; Refresh games reuses fresh cached data. Loading, empty, error and retry states are included.
+
+These public feeds are not guaranteed APIs and can change or block requests; errors are shown rather than substituting invented games. Both feeds must permit browser CORS for direct local-file use. ESPN’s live JSON schema and daily schedule requests were checked during development; NBA.com returned HTTP 403 in the development environment. No live database changes are required.
