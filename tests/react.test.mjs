@@ -42,6 +42,8 @@ await build({
     {
       name: "mock-auth",
       setup(build) {
+      build.onLoad({ filter: /services\/gameChat\.tsx$/ }, () => ({ loader: "tsx", contents: `export async function askAboutGame(){ return {text:"Latest report [source]",parts:[{type:"output_text",text:"Latest report [source]",annotations:[{type:"url_citation",start_index:14,end_index:22,url:"https://www.nba.com/news",title:"NBA report"}]}],incomplete:false}; }` }));
+
         build.onLoad({ filter: /services\/games\.tsx$/ }, () => ({
           loader: "ts",
           contents: `export async function getUpcomingGames(){return {games:[{id:'test-game',startsAt:'2026-11-21T01:00:00Z',away:{name:'Boston Celtics',abbreviation:'BOS'},home:{name:'Los Angeles Lakers',abbreviation:'LAL'},venue:'Test Arena',timeTbd:false}],source:'NBA.com',fetchedAt:'2026-11-20T00:00:00Z'};}`,
@@ -108,8 +110,9 @@ try {
     fireEvent.change(view.getByLabelText("Your message"), {
       target: { value: "What should I know?" },
     });
-    fireEvent.click(view.getByRole("button", { name: "Add message" }));
+    fireEvent.click(view.getByRole("button", { name: "Send message" }));
     assert.match(view.getByRole("log").textContent, /What should I know/);
+    await view.findByRole("link", { name: "NBA report" });
     fireEvent.click(view.getByRole("button", { name: "Close chat" }));
     assert.equal(
       view.queryByRole("complementary", { name: "Game chat" }),

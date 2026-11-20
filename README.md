@@ -48,7 +48,7 @@ Every client accepts an optional fetch implementation for tests. Each call accep
 
 API gateway configuration is passed explicitly to the factories. The app configures Supabase Auth from `src/config.tsx` and checks authentication on startup. Never put an OpenAI key, NBA provider secret, or Supabase secret/service-role key in browser code, HTML, localStorage, or git. Supabase publishable keys are intended for browser use; restrict exposed tables/functions using appropriate grants and RLS. The React app uses the Auth service for session acquisition/refresh; standalone clients accept a fresh JWT through getAccessToken.
 
-The OpenAI gateway is **not deployed or implemented yet**. It must authenticate the caller, validate/allowlist model and input limits, enforce usage limits, attach its server-held OpenAI key, call `POST https://api.openai.com/v1/responses`, and return the non-streaming JSON response with the original status. The frontend sends `store: false` and `stream: false`; text extraction supports Responses API message output. No ChatGPT subscription login is assumed.
+The game chat uses the authenticated Supabase Edge Function `game-chat`. It calls OpenAI’s Responses API with `web_search` enabled and preserves citation annotations for clickable inline source links. The browser sends only the game context and recent conversation; the server controls the model, instructions, search tool, and output limits.
 
 NBA provider selection is pending. This adapter expects GET `{gatewayUrl}/{endpoint}?parameters`, JSON responses, and NBA Stats `resultSets` for resultRows. A future gateway must allowlist endpoints and parameters, handle upstream headers/rate limits, and keep provider credentials server-side. `nba_api` is a Python package and is not bundled here. Other NBA providers may need a different response adapter. No claims are made that NBA.com supports direct browser calls.
 
@@ -102,4 +102,14 @@ These public feeds are not guaranteed APIs and can change or block requests; err
 
 Select a game card to open its details view, then use All games to return. `GameDetailsPage.tsx` shows the selected game’s real schedule data. `InformationCard.tsx` supports React content, image galleries, scrollable tables, and optional numeric line graphs (including a readable data list). No player statistics or graphs are invented; the statistics card stays empty until those APIs are connected.
 
-`ChatPanel.tsx` fills the right side on desktop, closes/reopens without losing drafts, and uses a full-screen panel on mobile. Mobile starts with chat closed so the game is visible. Messages remain only in that view: no OpenAI requests or persisted chats are implemented yet.
+`ChatPanel.tsx` fills the right side on desktop, closes/reopens without losing drafts, and uses a full-screen panel on mobile. Mobile starts with chat closed so the game is visible. Conversation history remains in memory for this game view. Sending a message transmits it and recent conversation to the authenticated OpenAI gateway; nothing is saved to a chat database.
+
+## Web-search chat setup
+
+The backend source is in `supabase/functions/game-chat/`. Add **OPENAI_API_KEY** under the KevAI project’s Supabase **Edge Functions → Secrets**. Never add it to `src/config.tsx`, a Vite environment variable, or git. The function defaults to `gpt-6.2-astra`; set **OPENAI_MODEL** server-side to use another model that supports Responses web search. API usage and web searches are billable. Set the OpenAI project’s budget/usage limits before opening the app to more users.
+
+The function verifies each caller through Supabase Auth’s `/user` endpoint; `verify_jwt = false` delegates authentication to this explicit server check, not to the browser. Missing/invalid sessions receive 401. Missing keys produce a configuration message. Requests are bounded to recent messages, two tool calls and 1,800 output tokens, with timeouts and no automatic retries. The six-request/minute throttle is best-effort per function instance, not a distributed quota.
+
+The game chat sends game title, scheduled UTC tip-off, venue, and recent conversation. It can research current injuries, lineups, and reliably reported news, while saying when reports cannot be verified. Source citations are displayed as clickable links beside the relevant answer text; no arbitrary response HTML is rendered. Search is available with automatic tool selection; not every message needs a search. Stop response cancels the browser request (upstream work may already have run). Closing chat preserves it; leaving the game discards its history. Failed messages remain visible and the draft is restored for manual retry.
+
+Checks use mocked OpenAI/Auth responses; no real paid search call is made during automated testing. Source: https://developers.openai.com/api/docs/guides/tools-web-search

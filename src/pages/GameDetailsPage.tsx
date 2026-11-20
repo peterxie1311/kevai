@@ -139,6 +139,7 @@ export default function GameDetailsPage({ game, onBack, onLogout }: Props) {
       </section>
       <ChatPanel
         gameTitle={title}
+        game={{ title, startsAt: game.startsAt, venue: game.venue }}
         hidden={!chatOpen}
         onClose={() => toggleChat(false)}
         closeButtonRef={closeButton}
