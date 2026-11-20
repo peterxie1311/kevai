@@ -343,3 +343,57 @@
  .games-grid { grid-template-columns: 1fr; }
  .game-card { aspect-ratio: auto; min-height: 280px; }
 }
+
+/* Game workspace */
+button.game-card { width: 100%; text-align: left; color: inherit; font: inherit; transition: border-color .15s, box-shadow .15s; }
+button.game-card:hover { border-color: #7b9870; box-shadow: 0 7px 22px #173b2c12; }
+button.game-card:focus-visible { outline: 3px solid #759c54; outline-offset: 4px; }
+.game-details-layout { min-height: 100dvh; background: #fafaf7; }
+.game-details-layout.with-chat { display: grid; grid-template-columns: minmax(0, 1fr) 370px; }
+.game-details-content { min-width: 0; padding: 32px 4vw 60px; }
+.details-header, .details-navigation { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.game-details-content main { max-width: 1200px; margin: 38px auto 0; }
+.details-navigation { margin-bottom: 34px; }
+.game-details-content h1 { font-size: clamp(30px, 3.8vw, 54px); line-height: 1.15; letter-spacing: -1.8px; margin: 16px 0; }
+.game-details-content h1:focus { outline: none; }
+.information-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 32px; }
+.information-card { min-width: 0; border: 1px solid #dfe4d8; border-radius: 14px; padding: 24px; background: #fff; }
+.information-card h2 { font-size: 17px; letter-spacing: -.3px; margin: 0 0 24px; }
+.game-facts { margin: 0; }
+.game-facts > div { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; margin: 17px 0; font-size: 12px; }
+.game-facts dt { color: #86917d; }
+.game-facts dd { margin: 0; overflow-wrap: anywhere; }
+.information-images { display: flex; gap: 20px; align-items: center; justify-content: space-evenly; }
+.information-images figure { flex: 1; min-width: 0; margin: 0; text-align: center; }
+.information-images img { width: 90px; height: 90px; max-width: 100%; object-fit: contain; }
+.information-images figcaption { font-size: 12px; line-height: 1.5; margin-top: 12px; }
+.information-table { max-width: 100%; max-height: 320px; overflow: auto; border: 1px solid #e5e9de; border-radius: 8px; }
+.information-table table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+.information-table th, .information-table td { padding: 14px; border-bottom: 1px solid #e9ede3; text-align: left; }
+.information-table th { background: #f3f6ee; position: sticky; top: 0; color: #637458; font-weight: 600; }
+.information-graph { margin: 0; }
+.information-graph svg { display: block; width: 100%; }
+.information-graph figcaption, .information-graph details { font-size: 12px; color: #6e8061; margin-top: 12px; }
+.team-initials { text-align: center; font-size: 28px; font-weight: 650; padding: 30px 0; }
+.team-initials span { margin: 0 15px; font-size: 14px; color: #9aa58e; }
+.game-chat { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; border-left: 1px solid #dce3d4; background: #f0f4ea; padding: 28px 24px; min-width: 0; }
+.game-chat[hidden] { display: none; }
+.chat-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.chat-heading .eyebrow { font-size: 8px; color: #7e8d72; }
+.chat-heading h2 { font-size: 24px; margin: 10px 0; }
+.chat-close { border: 1px solid #d9e0d0; background: transparent; width: 34px; height: 34px; border-radius: 50%; font-size: 22px; color: #536b45; }
+.chat-context { color: #77886b; font-size: 11px; line-height: 1.5; padding-bottom: 20px; border-bottom: 1px solid #dce3d4; }
+.chat-messages { flex: 1; min-height: 0; overflow-y: auto; overflow-wrap: anywhere; padding: 20px 0; }
+.chat-intro { font-size: 12px; color: #7b8c6d; line-height: 1.8; }
+.chat-intro > span { font-size: 28px; color: #557d42; }
+.chat-intro h3 { font-size: 19px; line-height: 1.5; font-weight: 500; color: #36552c; }
+.chat-message { background: white; padding: 14px; border-radius: 12px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+.chat-message > span { display: block; font-size: 9px; color: #87947b; }
+.chat-composer { margin: 18px 0 0; }
+.chat-composer label { font-size: 11px; color: #667b58; }
+.chat-composer textarea { width: 100%; resize: vertical; min-height: 70px; max-height: 180px; border: 1px solid #d8e0ce; border-radius: 8px; padding: 12px; background: #fff; font: inherit; font-size: 13px; }
+.chat-composer textarea:focus { outline: 2px solid #517c48; }
+.chat-composer button { height: 40px; margin-top: 10px; }
+.chat-composer > p { color: #89977c; font-size: 9px; text-align: center; }
+@media (max-width: 1050px) { .information-grid { grid-template-columns: 1fr; } .game-details-layout.with-chat { grid-template-columns: minmax(0, 1fr) 320px; } }
+@media (max-width: 700px) { .game-details-layout.with-chat { display: block; } .game-chat { position: fixed; inset: 0; width: 100%; height: 100dvh; z-index: 10; } .game-details-layout.with-chat .game-details-content { visibility: hidden; } .game-details-content { padding: 24px 22px; } }

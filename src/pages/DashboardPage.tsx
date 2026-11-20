@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Brand from "../components/Brand";
 import GameCard from "../components/GameCard";
+import GameDetailsPage from "./GameDetailsPage";
 import {
   getUpcomingGames,
   type GameSchedule,
@@ -13,6 +14,7 @@ export default function DashboardPage({
   email: string;
   onLogout: () => void;
 }) {
+  const [selectedGame, setSelectedGame] = useState<ScheduledGame | null>(null);
   const [schedule, setSchedule] = useState<GameSchedule>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,6 +48,15 @@ export default function DashboardPage({
     if (!groups.has(label)) groups.set(label, []);
     groups.get(label)!.push(game);
   }
+  if (selectedGame)
+    return (
+      <GameDetailsPage
+        game={selectedGame}
+        onBack={() => setSelectedGame(null)}
+        onLogout={onLogout}
+      />
+    );
+
   return (
     <section className="dashboard games-dashboard">
       <header>
@@ -109,7 +120,11 @@ export default function DashboardPage({
               </h2>
               <div className="games-grid">
                 {data.map((game) => (
-                  <GameCard key={game.id} game={game} />
+                  <GameCard
+                    key={game.id}
+                    game={game}
+                    onSelect={setSelectedGame}
+                  />
                 ))}
               </div>
             </section>

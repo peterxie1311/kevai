@@ -97,3 +97,9 @@ Use `npm run dev` while editing. `npm run build` uses Vite with `vite-plugin-sin
 The dashboard fetches real upcoming matchups for the next seven days, grouped by the viewer’s local calendar date. Cards show home/away teams, local tip-off, and venue. No API key is required. `src/services/games.tsx` first reads NBA.com’s public season schedule, then falls back to ESPN’s public NBA daily scoreboards when NBA.com is blocked or stale. The displayed source identifies the feed in use. Completed, live, cancelled and postponed games are omitted. Responses are cached in memory for five minutes; Refresh games reuses fresh cached data. Loading, empty, error and retry states are included.
 
 These public feeds are not guaranteed APIs and can change or block requests; errors are shown rather than substituting invented games. Both feeds must permit browser CORS for direct local-file use. ESPN’s live JSON schema and daily schedule requests were checked during development; NBA.com returned HTTP 403 in the development environment. No live database changes are required.
+
+## Game details and information cards
+
+Select a game card to open its details view, then use All games to return. `GameDetailsPage.tsx` shows the selected game’s real schedule data. `InformationCard.tsx` supports React content, image galleries, scrollable tables, and optional numeric line graphs (including a readable data list). No player statistics or graphs are invented; the statistics card stays empty until those APIs are connected.
+
+`ChatPanel.tsx` fills the right side on desktop, closes/reopens without losing drafts, and uses a full-screen panel on mobile. Mobile starts with chat closed so the game is visible. Messages remain only in that view: no OpenAI requests or persisted chats are implemented yet.

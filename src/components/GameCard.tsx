@@ -21,10 +21,18 @@ function Team({ team, location }: { team: GameTeam; location: string }) {
     </div>
   );
 }
-export default function GameCard({ game }: { game: ScheduledGame }) {
+export default function GameCard({
+  game,
+  onSelect,
+}: {
+  game: ScheduledGame;
+  onSelect: (game: ScheduledGame) => void;
+}) {
   const date = new Date(game.startsAt);
   return (
-    <article
+    <button
+      type="button"
+      onClick={() => onSelect(game)}
       className="game-card"
       aria-label={`${game.away.name} at ${game.home.name}`}
     >
@@ -54,6 +62,6 @@ export default function GameCard({ game }: { game: ScheduledGame }) {
         </strong>
         <span>{game.venue || "Venue to be announced"}</span>
       </div>
-    </article>
+    </button>
   );
 }
